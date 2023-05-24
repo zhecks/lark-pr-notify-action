@@ -15,6 +15,8 @@ async function run(): Promise<void> {
         const users = core.getInput('users')
         const msg = generateMessage(notificationTitle, users, status)
 
+        console.log('this is an example')
+
         const webhook = core.getInput('webhook')
         await notify(webhook, msg)
     } catch (error) {
