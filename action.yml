@@ -1,11 +1,25 @@
-name: 'Your name here'
-description: 'Provide a description here'
-author: 'Your name or organization here'
+name: "Lark pull request notify"
+description: "A lark pull request notify of GitHub actions."
+author: "zhecks"
 inputs:
-  milliseconds: # change this
+  notification_title:
+    required: false
+    description: "the title of notification"
+    default: "${{ github.repository }}"
+
+  users:
     required: true
-    description: 'input description here'
-    default: 'default value if applicable'
+    description: "the user mapping to the lark's open id, e.g. Alice|openID,Bob|openID"
+
+  workflows_status:
+    required: false
+    description: "the status of workflows which you need to notify"
+    default: "success"
+
+  webhook:
+    required: true
+    description: "the lark robot webhook"
+
 runs:
-  using: 'node16'
-  main: 'dist/index.js'
+  using: "node16"
+  main: "dist/index.js"

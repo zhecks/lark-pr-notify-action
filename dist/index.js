@@ -1,6 +1,116 @@
 require('./sourcemap-register.js');/******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
+/***/ 626:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.notify = exports.generateMessage = void 0;
+const github_1 = __nccwpck_require__(5438);
+const httpm = __importStar(__nccwpck_require__(6255));
+function generateMessage(notificationTitle, users, contentWorkflowsStatus) {
+    var _a, _b;
+    const contentPRUrl = ((_a = github_1.context.payload.pull_request) === null || _a === void 0 ? void 0 : _a.html_url) || '';
+    let contentUserID = '';
+    const userArr = users.split(',');
+    for (const user of userArr) {
+        const strs = user.split('|');
+        if (strs.length !== 2) {
+            throw new Error('the secret users is error');
+        }
+        if (strs[0] === github_1.context.actor) {
+            contentUserID = strs[1];
+        }
+    }
+    if (contentUserID === '') {
+        throw new Error('no this user in secret users, skip notify');
+    }
+    contentWorkflowsStatus = contentWorkflowsStatus.toUpperCase();
+    const contentPRTitle = (_b = github_1.context.payload.pull_request) === null || _b === void 0 ? void 0 : _b.title;
+    let contentWorkflowsStatusColor;
+    switch (contentWorkflowsStatus.toLowerCase()) {
+        case 'success':
+            contentWorkflowsStatusColor = 'green';
+            break;
+        default:
+            contentWorkflowsStatusColor = 'red';
+    }
+    const buttonPRUrL = contentPRUrl;
+    const msgCard = {
+        type: 'template',
+        data: {
+            template_id: 'ctp_AAgXNqY1B7oP',
+            template_variable: {
+                notification_title: notificationTitle,
+                content_pr_url: contentPRUrl,
+                content_user_id: contentUserID,
+                content_workflows_status: contentWorkflowsStatus,
+                content_workflows_status_color: contentWorkflowsStatusColor,
+                content_pr_title: contentPRTitle,
+                button_pr_url: buttonPRUrL
+            }
+        }
+    };
+    return {
+        msg_type: 'interactive',
+        card: JSON.stringify(msgCard)
+    };
+}
+exports.generateMessage = generateMessage;
+function notify(webhook, msg) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const jsonStr = JSON.stringify(msg);
+        const http = new httpm.HttpClient();
+        const response = yield http.post(webhook, jsonStr, httpm.Headers);
+        if (response.message.statusCode !== httpm.HttpCodes.OK) {
+            throw new Error(`"send request to webhook error, status code is ${response.message.statusCode}"`);
+        }
+        const body = yield response.readBody();
+        const larkResp = JSON.parse(body);
+        if (larkResp.code !== 0) {
+            throw new Error(`"send request to webhook error, err msg is ${larkResp.msg}"`);
+        }
+    });
+}
+exports.notify = notify;
+
+
+/***/ }),
+
 /***/ 3109:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
@@ -40,11 +150,16 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const core = __importStar(__nccwpck_require__(2186));
-const github = __importStar(__nccwpck_require__(5438));
+const lark_1 = __nccwpck_require__(626);
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            console.log(github.context);
+            const notificationTitle = core.getInput('notification_title');
+            const users = core.getInput('users');
+            const workflowsStatus = core.getInput('workflows_status');
+            const msg = (0, lark_1.generateMessage)(notificationTitle, users, workflowsStatus);
+            const webhook = core.getInput('webhook');
+            yield (0, lark_1.notify)(webhook, msg);
         }
         catch (error) {
             if (error instanceof Error)
