@@ -2,6 +2,16 @@ name: "Lark pull request notify"
 description: "A lark pull request notify of GitHub actions."
 author: "zhecks"
 inputs:
+  timeout:
+    required: false
+    description: "the action wait timeout, default:30m"
+    default: "1800"
+    
+  interval:
+    required: false
+    description: "the interval of polling, default:15"
+    default: "15"
+
   notification_title:
     required: false
     description: "the title of notification"
@@ -10,11 +20,6 @@ inputs:
   users:
     required: true
     description: "the user mapping to the lark's open id, e.g. Alice|openID,Bob|openID"
-
-  workflows_status:
-    required: false
-    description: "the status of workflows which you need to notify"
-    default: "success"
 
   webhook:
     required: true
