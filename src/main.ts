@@ -8,6 +8,8 @@ async function run(): Promise<void> {
         const workflowsStatus = core.getInput('workflows_status')
         const msg = generateMessage(notificationTitle, users, workflowsStatus)
 
+        console.log('this is an example')
+
         const webhook = core.getInput('webhook')
         await notify(webhook, msg)
     } catch (error) {

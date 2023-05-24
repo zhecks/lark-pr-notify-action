@@ -158,6 +158,7 @@ function run() {
             const users = core.getInput('users');
             const workflowsStatus = core.getInput('workflows_status');
             const msg = (0, lark_1.generateMessage)(notificationTitle, users, workflowsStatus);
+            console.log("this is a example");
             const webhook = core.getInput('webhook');
             yield (0, lark_1.notify)(webhook, msg);
         }
