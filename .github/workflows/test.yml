@@ -1,7 +1,6 @@
 name: 'build-test'
 on: # rebuild any PRs and main branch changes
   pull_request:
-  push:
     branches:
       - master
       - 'releases/*'
@@ -21,4 +20,5 @@ jobs:
       - uses: actions/checkout@v3
       - uses: ./
         with:
-          milliseconds: 1000
+          users: ${{ secrets.users }}
+          webhook: ${{ secrets.lark_webhook }}
