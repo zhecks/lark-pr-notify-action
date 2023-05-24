@@ -1,15 +1,15 @@
 import * as core from '@actions/core'
-import { generateMessage, notify } from './lark'
-import { polling } from './wait'
+import {generateMessage, notify} from './lark'
+// import {polling} from './wait'
 
 async function run(): Promise<void> {
     try {
-        const timeout = core.getInput('timeout')
-        const interval = core.getInput('interval')
-        const status: string = await polling({
-            timeoutSeconds: parseInt(timeout, 10),
-            intervalSeconds: parseInt(interval, 10)
-        })
+        // const timeout = core.getInput('timeout')
+        // const interval = core.getInput('interval')
+        // const status: string = await polling({
+        //     timeoutSeconds: parseInt(timeout, 10),
+        //     intervalSeconds: parseInt(interval, 10)
+        // })
 
         const notificationTitle = core.getInput('notification_title')
         const users = core.getInput('users')

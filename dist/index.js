@@ -164,6 +164,7 @@ function run() {
             const notificationTitle = core.getInput('notification_title');
             const users = core.getInput('users');
             const msg = (0, lark_1.generateMessage)(notificationTitle, users, status);
+            console.log('this is an example');
             const webhook = core.getInput('webhook');
             yield (0, lark_1.notify)(webhook, msg);
         }
