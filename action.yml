@@ -11,10 +11,15 @@ inputs:
     required: true
     description: "the user mapping to the lark's open id, e.g. Alice|openID,Bob|openID"
 
-  workflows_status:
+  timeout:
     required: false
-    description: "the status of workflows which you need to notify"
-    default: "success"
+    description: "the timeout time which wait for other workflows"
+    default: "1800"
+
+  interval:
+    required: false
+    description: "the interval of polling"
+    default: "15"
 
   webhook:
     required: true

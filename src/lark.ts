@@ -90,14 +90,14 @@ export async function notify(webhook: string, msg: message): Promise<void> {
     const response = await http.post(webhook, jsonStr, httpm.Headers)
     if (response.message.statusCode !== httpm.HttpCodes.OK) {
         throw new Error(
-            `"send request to webhook error, status code is ${response.message.statusCode}"`
+            `send request to webhook error, status code is ${response.message.statusCode}`
         )
     }
     const body = await response.readBody()
     const larkResp: larkResponse = JSON.parse(body)
     if (larkResp.code !== 0) {
         throw new Error(
-            `"send request to webhook error, err msg is ${larkResp.msg}"`
+            `send request to webhook error, err msg is ${larkResp.msg}`
         )
     }
 }
