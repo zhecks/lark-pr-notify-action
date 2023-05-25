@@ -1,4 +1,4 @@
-import { context } from '@actions/github'
+import {context} from '@actions/github'
 import * as httpm from '@actions/http-client'
 import * as core from '@actions/core'
 
@@ -12,6 +12,7 @@ async function wait(milliseconds: number): Promise<string> {
 }
 
 interface Options {
+    token: string
     timeoutSeconds: number
     intervalSeconds: number
 }
@@ -27,18 +28,24 @@ interface workflowRun {
 }
 
 export async function polling(options: Options): Promise<string> {
-    const { timeoutSeconds, intervalSeconds } = options
+    const {timeoutSeconds, intervalSeconds, token} = options
     let now = new Date().getTime()
     const deadline = now + timeoutSeconds * 1000
     const headSha = context.payload.pull_request?.head.sha
     const http = new httpm.HttpClient('lark-pr-notify-action')
     const url = `${context.apiUrl}/repos/${context.repo.owner}/${context.repo.repo}/actions/runs?head_sha=${headSha}`
+    let headers = {}
+    if (token !== '') {
+        headers = {
+            Authorization: `Bearer ${token}`
+        }
+    }
     let isCompleted
     let isSuccess
     while (now < deadline) {
         isCompleted = true
         isSuccess = true
-        const response = await http.get(url)
+        const response = await http.get(url, headers)
         const body = await response.readBody()
         const workflows: workflowRuns = JSON.parse(body)
         for (const workflow of workflows.workflow_runs) {

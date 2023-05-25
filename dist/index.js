@@ -158,14 +158,17 @@ function run() {
             core.info('waiting other actions...');
             const timeout = core.getInput('timeout');
             const interval = core.getInput('interval');
+            const tk = core.getInput('token');
             const status = yield (0, wait_1.polling)({
                 timeoutSeconds: parseInt(timeout, 10),
-                intervalSeconds: parseInt(interval, 10)
+                intervalSeconds: parseInt(interval, 10),
+                token: tk
             });
             core.info(`the workflows status is ${status}`);
             const notificationTitle = core.getInput('notification_title');
             const users = core.getInput('users');
             const msg = (0, lark_1.generateMessage)(notificationTitle, users, status);
+            core.info('send notification to lark');
             const webhook = core.getInput('webhook');
             yield (0, lark_1.notify)(webhook, msg);
             core.info('finalize');
@@ -236,18 +239,24 @@ function wait(milliseconds) {
 function polling(options) {
     var _a;
     return __awaiter(this, void 0, void 0, function* () {
-        const { timeoutSeconds, intervalSeconds } = options;
+        const { timeoutSeconds, intervalSeconds, token } = options;
         let now = new Date().getTime();
         const deadline = now + timeoutSeconds * 1000;
         const headSha = (_a = github_1.context.payload.pull_request) === null || _a === void 0 ? void 0 : _a.head.sha;
         const http = new httpm.HttpClient('lark-pr-notify-action');
         const url = `${github_1.context.apiUrl}/repos/${github_1.context.repo.owner}/${github_1.context.repo.repo}/actions/runs?head_sha=${headSha}`;
+        let headers = {};
+        if (token !== '') {
+            headers = {
+                Authorization: `Bearer ${token}`
+            };
+        }
         let isCompleted;
         let isSuccess;
         while (now < deadline) {
             isCompleted = true;
             isSuccess = true;
-            const response = yield http.get(url);
+            const response = yield http.get(url, headers);
             const body = yield response.readBody();
             const workflows = JSON.parse(body);
             for (const workflow of workflows.workflow_runs) {
