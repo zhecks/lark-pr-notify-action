@@ -6,6 +6,10 @@ inputs:
     required: false
     description: "the title of notification"
     default: "${{ github.repository }}"
+  
+  token:
+    required: false
+    description: "it's neccessary for private repository, public repository also can use token to increase api's limit"
 
   users:
     required: true
@@ -23,7 +27,7 @@ inputs:
 
   webhook:
     required: true
-    description: "the lark robot webhook"
+    description: "the lark robot's webhook"
 
 runs:
   using: "node16"
