@@ -1,105 +1,37 @@
-<p align="center">
-  <a href="https://github.com/actions/typescript-action/actions"><img alt="typescript-action status" src="https://github.com/actions/typescript-action/workflows/build-test/badge.svg"></a>
-</p>
+# lark-pr-notify-action-飞书PR通知工作流
 
-# Create a JavaScript Action using TypeScript
+![build-test](https://github.com/zhecks/lark-pr-notify-action/actions/workflows/test.yml/badge.svg)
 
-Use this template to bootstrap the creation of a TypeScript action.:rocket:
+## 工作流用途
 
-This template includes compilation support, tests, a validation workflow, publishing, and versioning guidance.  
+在提交PR后，通常需要等待工作流执行完成后才能进行合并。如果工作流的执行时间较长，开发者可能会忘记合并PR，这会导致PR合并的推迟并可能因此产生一系列问题。因此，有必要在工作流执行完成后，尽快进行PR的合并。
 
-If you are new, there's also a simpler introduction.  See the [Hello World JavaScript Action](https://github.com/actions/hello-world-javascript-action)
+该工作流支持在其他工作流完成后，通过飞书🤖的webhook推送该事件的消息。
 
-## Create an action from this template
+![示例](https://cdn.jsdelivr.net/gh/jiuhuche120/CDN/images/img_v2_effe82ee-35a9-47ee-b961-ffa5e654f00g.jpg)
 
-Click the `Use this Template` and provide the new repo details for your action
+## 工作流原理
 
-## Code in Main
+### 如何检查其他工作流
 
-> First, you'll need to have a reasonably modern version of `node` handy. This won't work with versions older than 9, for instance.
+![检查其他工作流](https://cdn.jsdelivr.net/gh/jiuhuche120/CDN/images/img_v2_32fb5b51-212b-4381-a0cd-fd492911453g.jpg)
 
-Install the dependencies  
-```bash
-$ npm install
-```
+### 轮训逻辑
 
-Build the typescript and package it for distribution
-```bash
-$ npm run build && npm run package
-```
+1. 若存在未结束的action，则继续轮询下一轮
+2. 若出现失败的action，则终止轮询并进行通知
+3. 若所有的action都成功，则终止轮训并进行通知
 
-Run the tests :heavy_check_mark:  
-```bash
-$ npm test
+## 参数说明
 
- PASS  ./index.test.js
-  ✓ throws invalid number (3ms)
-  ✓ wait 500 ms (504ms)
-  ✓ test runs (95ms)
+* **notification_title**: 通知的标题，默认是项目的名称(非必须)
 
-...
-```
+* **token**: github令牌，私有仓库必须，公共仓库也能通过令牌提升api调用次数(非必须)
 
-## Change action.yml
+* **users**: github账户和飞书open_id的映射关系，e.g. Alice|ou_xx,Bob|ou_xx(必须)
 
-The action.yml defines the inputs and output for your action.
+* **timeout**: 超时时间，默认是1800s(非必须)
 
-Update the action.yml with your name, description, inputs and outputs for your action.
+* **interval**: 轮训的间隔，工作流运行较快适当降低间隔，工作流较慢的适当提升间隔，默认15s(非必须)
 
-See the [documentation](https://help.github.com/en/articles/metadata-syntax-for-github-actions)
-
-## Change the Code
-
-Most toolkit and CI/CD operations involve async operations so the action is run in an async function.
-
-```javascript
-import * as core from '@actions/core';
-...
-
-async function run() {
-  try { 
-      ...
-  } 
-  catch (error) {
-    core.setFailed(error.message);
-  }
-}
-
-run()
-```
-
-See the [toolkit documentation](https://github.com/actions/toolkit/blob/master/README.md#packages) for the various packages.
-
-## Publish to a distribution branch
-
-Actions are run from GitHub repos so we will checkin the packed dist folder. 
-
-Then run [ncc](https://github.com/zeit/ncc) and push the results:
-```bash
-$ npm run package
-$ git add dist
-$ git commit -a -m "prod dependencies"
-$ git push origin releases/v1
-```
-
-Note: We recommend using the `--license` option for ncc, which will create a license file for all of the production node modules used in your project.
-
-Your action is now published! :rocket: 
-
-See the [versioning documentation](https://github.com/actions/toolkit/blob/master/docs/action-versioning.md)
-
-## Validate
-
-You can now validate the action by referencing `./` in a workflow in your repo (see [test.yml](.github/workflows/test.yml))
-
-```yaml
-uses: ./
-with:
-  milliseconds: 1000
-```
-
-See the [actions tab](https://github.com/actions/typescript-action/actions) for runs of this action! :rocket:
-
-## Usage:
-
-After testing you can [create a v1 tag](https://github.com/actions/toolkit/blob/master/docs/action-versioning.md) to reference the stable and latest V1 action
+* **webhook**: 飞书🤖的webhook地址(必须)
