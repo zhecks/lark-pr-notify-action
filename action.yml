@@ -28,6 +28,10 @@ inputs:
   webhook:
     required: true
     description: "the lark robot's webhook"
+  
+  secret:
+    required: false
+    description: "the secret to signature verfiy"
 
 runs:
   using: "node16"
