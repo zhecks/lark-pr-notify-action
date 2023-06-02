@@ -1,9 +1,13 @@
 import {context} from '@actions/github'
 import * as httpm from '@actions/http-client'
+import {generateSignature} from './safe'
+import * as core from '@actions/core'
 
 interface message {
     msg_type: string
     card: string
+    timestamp: string
+    sign: string
 }
 
 interface card {
@@ -35,7 +39,8 @@ interface larkResponse {
 export function generateMessage(
     notificationTitle: string,
     users: string,
-    contentWorkflowsStatus: string
+    contentWorkflowsStatus: string,
+    secret: string
 ): message {
     const contentPRUrl = context.payload.pull_request?.html_url || ''
     let contentUserID = ''
@@ -78,9 +83,14 @@ export function generateMessage(
             }
         }
     }
+    const now = Math.floor(Date.now() / 1000).toString()
+    core.info(`timestamp: ${now}`)
+    const signature = generateSignature(now, secret)
     return {
         msg_type: 'interactive',
-        card: JSON.stringify(msgCard)
+        card: JSON.stringify(msgCard),
+        timestamp: now,
+        sign: signature
     }
 }
 

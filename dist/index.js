@@ -42,7 +42,9 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.notify = exports.generateMessage = void 0;
 const github_1 = __nccwpck_require__(5438);
 const httpm = __importStar(__nccwpck_require__(6255));
-function generateMessage(notificationTitle, users, contentWorkflowsStatus) {
+const safe_1 = __nccwpck_require__(7526);
+const core = __importStar(__nccwpck_require__(2186));
+function generateMessage(notificationTitle, users, contentWorkflowsStatus, secret) {
     var _a, _b;
     const contentPRUrl = ((_a = github_1.context.payload.pull_request) === null || _a === void 0 ? void 0 : _a.html_url) || '';
     let contentUserID = '';
@@ -85,9 +87,14 @@ function generateMessage(notificationTitle, users, contentWorkflowsStatus) {
             }
         }
     };
+    const now = Math.floor(Date.now() / 1000).toString();
+    core.info(`timestamp: ${now}`);
+    const signature = (0, safe_1.generateSignature)(now, secret);
     return {
         msg_type: 'interactive',
-        card: JSON.stringify(msgCard)
+        card: JSON.stringify(msgCard),
+        timestamp: now,
+        sign: signature
     };
 }
 exports.generateMessage = generateMessage;
@@ -167,7 +174,8 @@ function run() {
             core.info(`the workflows status is ${status}`);
             const notificationTitle = core.getInput('notification_title');
             const users = core.getInput('users');
-            const msg = (0, lark_1.generateMessage)(notificationTitle, users, status);
+            const secret = core.getInput('secret');
+            const msg = (0, lark_1.generateMessage)(notificationTitle, users, status, secret);
             core.info('send notification to lark');
             const webhook = core.getInput('webhook');
             yield (0, lark_1.notify)(webhook, msg);
@@ -180,6 +188,47 @@ function run() {
     });
 }
 run();
+
+
+/***/ }),
+
+/***/ 7526:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.generateSignature = void 0;
+const crypto = __importStar(__nccwpck_require__(6113));
+function generateSignature(timestamp, secret) {
+    const stringToSign = `${timestamp}\n${secret}`;
+    const hmac = crypto.createHmac('sha256', stringToSign);
+    return hmac.digest('base64');
+}
+exports.generateSignature = generateSignature;
 
 
 /***/ }),

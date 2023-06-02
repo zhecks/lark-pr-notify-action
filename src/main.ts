@@ -17,7 +17,8 @@ async function run(): Promise<void> {
         core.info(`the workflows status is ${status}`)
         const notificationTitle = core.getInput('notification_title')
         const users = core.getInput('users')
-        const msg = generateMessage(notificationTitle, users, status)
+        const secret = core.getInput('secret')
+        const msg = generateMessage(notificationTitle, users, status, secret)
 
         core.info('send notification to lark')
         const webhook = core.getInput('webhook')

@@ -22,3 +22,4 @@ jobs:
         with:
           users: ${{ secrets.users }}
           webhook: ${{ secrets.lark_webhook }}
+          secret: ${{ secrets.secret }}
