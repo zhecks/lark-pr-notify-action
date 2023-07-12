@@ -58,7 +58,7 @@ export async function polling(options: Options): Promise<string> {
             if (workflow.status !== 'completed') {
                 isCompleted = false
             }
-            if (workflow.conclusion === 'failure') {
+            if (workflow.conclusion !== 'success') {
                 isSuccess = false
             }
         }

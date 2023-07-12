@@ -18,6 +18,10 @@ inputs:
   users:
     required: true
     description: "the user mapping to the lark's open id, e.g. Alice|openID,Bob|openID"
+  
+  reviewers:
+    required: true
+    description: "the reviewer, e.g. openID,openID"
 
   timeout:
     required: false

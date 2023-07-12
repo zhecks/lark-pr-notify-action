@@ -44,23 +44,23 @@ const github_1 = __nccwpck_require__(5438);
 const httpm = __importStar(__nccwpck_require__(6255));
 const safe_1 = __nccwpck_require__(7526);
 const core = __importStar(__nccwpck_require__(2186));
-function generateMessage(notificationTitle, users, contentWorkflowsStatus, secret) {
+function generateAt(contentWorkflowsStatus, openIDs) {
+    let contentAt = '';
+    switch (contentWorkflowsStatus.toLowerCase()) {
+        case 'success':
+            contentAt = contentAt + '审核人：'.toString();
+            break;
+        default:
+            contentAt = contentAt + '创建人：'.toString();
+    }
+    for (const openID of openIDs) {
+        contentAt = contentAt + `<at id='${openID}'></at> `.toString();
+    }
+    return contentAt;
+}
+function generateMessage(templateID, notificationTitle, users, reviewers, contentWorkflowsStatus, secret) {
     var _a, _b;
     const contentPRUrl = ((_a = github_1.context.payload.pull_request) === null || _a === void 0 ? void 0 : _a.html_url) || '';
-    let contentUserID = '';
-    const userArr = users.split(',');
-    for (const user of userArr) {
-        const strs = user.split('|');
-        if (strs.length !== 2) {
-            throw new Error('the secret users is error');
-        }
-        if (strs[0] === github_1.context.actor) {
-            contentUserID = strs[1];
-        }
-    }
-    if (contentUserID === '') {
-        throw new Error('no this user in secret users, skip notify');
-    }
     contentWorkflowsStatus = contentWorkflowsStatus.toUpperCase();
     const contentPRTitle = (_b = github_1.context.payload.pull_request) === null || _b === void 0 ? void 0 : _b.title;
     let contentWorkflowsStatusColor;
@@ -71,22 +71,43 @@ function generateMessage(notificationTitle, users, contentWorkflowsStatus, secre
         default:
             contentWorkflowsStatusColor = 'red';
     }
-    const buttonPRUrL = contentPRUrl;
+    let openIDs = [];
+    const userArr = users.split(',');
+    for (const user of userArr) {
+        const infos = user.split('|');
+        if (infos.length !== 2) {
+            throw new Error('the secret users is error');
+        }
+        if (infos[0] === github_1.context.actor) {
+            openIDs.push(infos[1]);
+            break;
+        }
+    }
+    // pr's actor is not in users, skip notify
+    if (openIDs.length === 0) {
+        throw new Error('no this user in secret users, skip notify');
+    }
+    // success, notify reviewers
+    if (contentWorkflowsStatus.toLowerCase() === 'success') {
+        openIDs = reviewers.split(',');
+    }
+    const contentAt = generateAt(contentWorkflowsStatus, openIDs);
     const msgCard = {
         type: 'template',
         data: {
-            template_id: 'ctp_AAgXNqY1B7oP',
+            template_id: templateID,
             template_variable: {
                 notification_title: notificationTitle,
                 content_pr_url: contentPRUrl,
-                content_user_id: contentUserID,
+                content_at: contentAt,
+                content_pr_title: contentPRTitle,
                 content_workflows_status: contentWorkflowsStatus,
                 content_workflows_status_color: contentWorkflowsStatusColor,
-                content_pr_title: contentPRTitle,
-                button_pr_url: buttonPRUrL
+                button_pr_url: contentPRUrl
             }
         }
     };
+    // generate sign
     const now = Math.floor(Date.now() / 1000).toString();
     core.info(`timestamp: ${now}`);
     const signature = (0, safe_1.generateSignature)(now, secret);
@@ -172,10 +193,12 @@ function run() {
                 token: tk
             });
             core.info(`the workflows status is ${status}`);
+            const templateID = core.getInput('template_id');
             const notificationTitle = core.getInput('notification_title');
             const users = core.getInput('users');
+            const reviewers = core.getInput('reviewers');
             const secret = core.getInput('secret');
-            const msg = (0, lark_1.generateMessage)(notificationTitle, users, status, secret);
+            const msg = (0, lark_1.generateMessage)(templateID, notificationTitle, users, reviewers, status, secret);
             core.info('send notification to lark');
             const webhook = core.getInput('webhook');
             yield (0, lark_1.notify)(webhook, msg);
@@ -316,7 +339,7 @@ function polling(options) {
                 if (workflow.status !== 'completed') {
                     isCompleted = false;
                 }
-                if (workflow.conclusion === 'failure') {
+                if (workflow.conclusion !== 'success') {
                     isSuccess = false;
                 }
             }
