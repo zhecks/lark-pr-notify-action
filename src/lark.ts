@@ -1,6 +1,6 @@
-import {context} from '@actions/github'
+import { context } from '@actions/github'
 import * as httpm from '@actions/http-client'
-import {generateSignature} from './safe'
+import { generateSignature } from './safe'
 import * as core from '@actions/core'
 
 interface message {
@@ -37,6 +37,7 @@ interface larkResponse {
 }
 
 export function generateMessage(
+    templateID: string,
     notificationTitle: string,
     users: string,
     contentWorkflowsStatus: string,
@@ -71,7 +72,7 @@ export function generateMessage(
     const msgCard: card = {
         type: 'template',
         data: {
-            template_id: 'ctp_AAgXNqY1B7oP',
+            template_id: templateID,
             template_variable: {
                 notification_title: notificationTitle,
                 content_pr_url: contentPRUrl,

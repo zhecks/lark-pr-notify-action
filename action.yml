@@ -2,6 +2,10 @@ name: "Lark pull request notify"
 description: "A lark pull request notify of GitHub actions."
 author: "zhecks"
 inputs:
+  template_id:
+    required: true
+    description: "the lark template ID. You can create by self or use template.json"
+
   notification_title:
     required: false
     description: "the title of notification"

@@ -1,0 +1,117 @@
+{
+    "templateId": "ctp_AAqkFfWPTch4",
+    "content": {
+        "config": {
+            "wide_screen_mode": true
+        },
+        "header": {
+            "template": "blue",
+            "title": {
+                "tag": "plain_text",
+                "content": "${notification_title}"
+            }
+        },
+        "elements": [
+            {
+                "tag": "markdown",
+                "content": "Pull Request：<a href='${content_pr_url}'>${content_pr_title}</a>\n创建人：<at id=${content_user_id}></at>\n工作流状态：<font color='${content_workflows_status_color}'>${content_workflows_status}</font>\n\n"
+            },
+            {
+                "alt": {
+                    "content": "",
+                    "tag": "plain_text"
+                },
+                "img_key": "img_v2_e83dc4d3-f563-4a4c-8470-bea37ef2badg",
+                "tag": "img",
+                "mode": "fit_horizontal",
+                "preview": false,
+                "compact_width": false
+            },
+            {
+                "tag": "action",
+                "actions": [
+                    {
+                        "tag": "button",
+                        "text": {
+                            "tag": "plain_text",
+                            "content": "查看pull request"
+                        },
+                        "type": "primary",
+                        "multi_url": {
+                            "url": "${button_pr_url}",
+                            "pc_url": "",
+                            "android_url": "",
+                            "ios_url": ""
+                        }
+                    }
+                ]
+            }
+        ]
+    },
+    "mock_data": "{\"content_pr_url\":\"https://github.com/zhecks/lark-pr-notify-action/pull/13\",\"content_user_id\":\"\",\"content_workflows_status\":\"SUCCESS\",\"content_pr_title\":\"feat(*): update docs\",\"content_workflows_status_color\":\"green\",\"button_pr_url\":\"feat(*): update docs\",\"notification_title\":\"lark-pr-notify-action notifications\"}",
+    "variables": [
+        {
+            "config": "{\"is_multi_url\":false}",
+            "create_time": 1689133036,
+            "description": "pull request的超链接",
+            "name": "button_pr_url",
+            "type": "Link",
+            "update_time": 1689133036,
+            "variable_id": "7254492708376199170"
+        },
+        {
+            "config": "{}",
+            "create_time": 1689133036,
+            "description": "pull request的标题",
+            "name": "content_pr_title",
+            "type": "Text",
+            "update_time": 1689133036,
+            "variable_id": "7254492708376215554"
+        },
+        {
+            "config": "{}",
+            "create_time": 1689133036,
+            "description": "pull request的超链接",
+            "name": "content_pr_url",
+            "type": "Text",
+            "update_time": 1689133036,
+            "variable_id": "7254492708376231938"
+        },
+        {
+            "config": "{}",
+            "create_time": 1689133036,
+            "description": "pull request创建者的open id",
+            "name": "content_user_id",
+            "type": "Text",
+            "update_time": 1689133036,
+            "variable_id": "7254492708376248322"
+        },
+        {
+            "config": "{}",
+            "create_time": 1689133036,
+            "description": "pull request的状态",
+            "name": "content_workflows_status",
+            "type": "Text",
+            "update_time": 1689133036,
+            "variable_id": "7254492708376264706"
+        },
+        {
+            "config": "{}",
+            "create_time": 1689133036,
+            "description": "成功为绿色，失败为红色",
+            "name": "content_workflows_status_color",
+            "type": "Text",
+            "update_time": 1689133036,
+            "variable_id": "7254492708376281090"
+        },
+        {
+            "config": "{}",
+            "create_time": 1689133036,
+            "description": "通知的标题",
+            "name": "notification_title",
+            "type": "Text",
+            "update_time": 1689133036,
+            "variable_id": "7254492708376297474"
+        }
+    ]
+}
