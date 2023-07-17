@@ -92,6 +92,7 @@ export function generateMessage(
         openIDs = reviewers.split(',')
     }
     const contentAt = generateAt(contentWorkflowsStatus, openIDs)
+    core.debug(contentAt)
 
     const msgCard: card = {
         type: 'template',

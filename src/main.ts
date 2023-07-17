@@ -28,6 +28,7 @@ async function run(): Promise<void> {
             status,
             secret
         )
+        console.debug(msg)
 
         core.info('send notification to lark')
         const webhook = core.getInput('webhook')
