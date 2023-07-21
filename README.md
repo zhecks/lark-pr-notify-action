@@ -8,7 +8,9 @@
 
 该工作流支持在其他工作流完成后，通过飞书🤖的webhook推送该事件的消息。
 
-![示例](https://cdn.jsdelivr.net/gh/jiuhuche120/CDN/images/img_v2_effe82ee-35a9-47ee-b961-ffa5e654f00g.jpg)
+![示例1](https://cdn.jsdelivr.net/gh/jiuhuche120/CDN/images/202307211531235.png)
+
+![示例2](https://cdn.jsdelivr.net/gh/jiuhuche120/CDN/images/202307211534208.png)
 
 ## 工作流原理
 
@@ -19,16 +21,20 @@
 ### 轮训逻辑
 
 1. 若存在未结束的action，则继续轮询下一轮
-2. 若出现失败的action，则终止轮询并进行通知
-3. 若所有的action都成功，则终止轮训并进行通知
+2. 若出现失败的action，则终止轮询并进行通知PR创建人
+3. 若所有的action都成功，则终止轮训并进行通知PR审计人
 
 ## 参数说明
+
+* **template_id**: 飞书的卡片模板ID，模板：template.json(必须)
 
 * **notification_title**: 通知的标题，默认是项目的名称(非必须)
 
 * **token**: github令牌，私有仓库必须，公共仓库也能通过令牌提升api调用次数(非必须)
 
 * **users**: github账户和飞书open_id的映射关系，e.g. Alice|ou_xx,Bob|ou_xx(必须)
+
+* **reviewers**: 代码审计人的open_id，e.g. ou_xx,ou_xx,ou_xx(必须)
 
 * **timeout**: 超时时间，默认是1800s(非必须)
 
