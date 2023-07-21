@@ -48,10 +48,10 @@ function generateAt(contentWorkflowsStatus, openIDs) {
     let contentAt = '';
     switch (contentWorkflowsStatus.toLowerCase()) {
         case 'success':
-            contentAt = contentAt + '审核人：'.toString();
+            contentAt = '审核人：'.toString();
             break;
         default:
-            contentAt = contentAt + '创建人：'.toString();
+            contentAt = '创建人：'.toString();
     }
     for (const openID of openIDs) {
         contentAt = contentAt + `<at id='${openID}'></at> `.toString();
@@ -64,35 +64,38 @@ function generateMessage(templateID, notificationTitle, users, reviewers, conten
     contentWorkflowsStatus = contentWorkflowsStatus.toUpperCase();
     const contentPRTitle = (_b = github_1.context.payload.pull_request) === null || _b === void 0 ? void 0 : _b.title;
     let contentWorkflowsStatusColor;
-    switch (contentWorkflowsStatus.toLowerCase()) {
-        case 'success':
+    switch (contentWorkflowsStatus) {
+        case 'SUCCESS':
             contentWorkflowsStatusColor = 'green';
             break;
         default:
             contentWorkflowsStatusColor = 'red';
     }
     let openIDs = [];
-    const userArr = users.split(',');
-    for (const user of userArr) {
-        const infos = user.split('|');
-        if (infos.length !== 2) {
-            throw new Error('the secret users is error');
-        }
-        if (infos[0] === github_1.context.actor) {
-            openIDs.push(infos[1]);
-            break;
-        }
-    }
-    // pr's actor is not in users, skip notify
-    if (openIDs.length === 0) {
-        throw new Error('no this user in secret users, skip notify');
-    }
     // success, notify reviewers
-    if (contentWorkflowsStatus.toLowerCase() === 'success') {
+    if (contentWorkflowsStatus === 'SUCCESS') {
         openIDs = reviewers.split(',');
     }
+    else {
+        // fail, notify creator
+        const userArr = users.split(',');
+        for (const user of userArr) {
+            const userMapping = user.split('|');
+            if (userMapping.length !== 2) {
+                throw new Error('the secret users is error');
+            }
+            if (userMapping[0] === github_1.context.actor) {
+                openIDs.push(userMapping[1]);
+                break;
+            }
+        }
+        // pr's actor is not in users, skip notify
+        if (openIDs.length === 0) {
+            core.info('no this user in secret users, skip notify');
+            return;
+        }
+    }
     const contentAt = generateAt(contentWorkflowsStatus, openIDs);
-    core.debug(contentAt);
     const msgCard = {
         type: 'template',
         data: {
@@ -200,10 +203,12 @@ function run() {
             const reviewers = core.getInput('reviewers');
             const secret = core.getInput('secret');
             const msg = (0, lark_1.generateMessage)(templateID, notificationTitle, users, reviewers, status, secret);
-            console.debug(msg);
-            core.info('send notification to lark');
-            const webhook = core.getInput('webhook');
-            yield (0, lark_1.notify)(webhook, msg);
+            // need notify
+            if (msg != null) {
+                core.info('send notification to lark');
+                const webhook = core.getInput('webhook');
+                yield (0, lark_1.notify)(webhook, msg);
+            }
             core.info('finalize');
         }
         catch (error) {
@@ -325,7 +330,6 @@ function polling(options) {
             isSuccess: false
         };
         while (now < deadline) {
-            isSuccess = true;
             actionStatus = yield checkActions(actionStatus, token);
             checkStatus = yield checkChecks(checkStatus, token);
             if (!actionStatus.isCompleted || !checkStatus.isCompleted) {
@@ -350,6 +354,7 @@ exports.polling = polling;
 function checkActions(actionStatus, token) {
     var _a;
     return __awaiter(this, void 0, void 0, function* () {
+        // actions check is completed return last status
         if (actionStatus.isCompleted) {
             return actionStatus;
         }
@@ -362,12 +367,13 @@ function checkActions(actionStatus, token) {
                 Authorization: `Bearer ${token}`
             };
         }
-        let isCompleted = true;
-        let isSuccess = true;
         const response = yield http.get(url, headers);
         const body = yield response.readBody();
         const workflows = JSON.parse(body);
+        let isCompleted = true;
+        let isSuccess = true;
         for (const workflow of workflows.workflow_runs) {
+            // ignore lark-pr-notify-action
             if (github_1.context.workflow === workflow.name) {
                 continue;
             }
@@ -400,13 +406,14 @@ function checkChecks(checkStatus, token) {
                 Authorization: `Bearer ${token}`
             };
         }
-        let isCompleted = true;
-        let isSuccess = true;
         const response = yield http.get(url, headers);
         const body = yield response.readBody();
         const checks = JSON.parse(body);
+        let isCompleted = true;
+        let isSuccess = true;
         for (const check of checks.check_runs) {
-            const workflowName = yield getWorkflowName(check.id, token);
+            const workflowName = yield getWorkflowNameByJobID(check.id, token);
+            // ignore lark-pr-notify-action
             if (github_1.context.workflow === workflowName) {
                 continue;
             }
@@ -424,7 +431,7 @@ function checkChecks(checkStatus, token) {
         };
     });
 }
-function getWorkflowName(jobID, token) {
+function getWorkflowNameByJobID(jobID, token) {
     return __awaiter(this, void 0, void 0, function* () {
         const http = new httpm.HttpClient('lark-pr-notify-action');
         const url = `${github_1.context.apiUrl}/repos/${github_1.context.repo.owner}/${github_1.context.repo.repo}/actions/jobs/${jobID}`;

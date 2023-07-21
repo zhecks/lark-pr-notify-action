@@ -17,33 +17,33 @@ interface Options {
     intervalSeconds: number
 }
 
-interface workflowRuns {
-    workflow_runs: workflowRun[]
+interface WorkflowRuns {
+    workflow_runs: WorkflowRun[]
 }
 
-interface workflowRun {
+interface WorkflowRun {
     name: string
     status: string
     conclusion: string
 }
 
-interface checkRuns {
-    check_runs: checkRun[]
+interface CheckRuns {
+    check_runs: CheckRun[]
 }
 
-interface checkRun {
+interface CheckRun {
     id: number
     name: string
     status: string
     conclusion: string
 }
 
-interface status {
+interface Status {
     isCompleted: boolean
     isSuccess: boolean
 }
 
-interface workflowInfo {
+interface WorkflowInfo {
     workflow_name: string
 }
 
@@ -53,17 +53,15 @@ export async function polling(options: Options): Promise<string> {
     const deadline = now + timeoutSeconds * 1000
 
     let isSuccess
-    let actionStatus: status = {
+    let actionStatus: Status = {
         isCompleted: false,
         isSuccess: false
     }
-    let checkStatus: status = {
+    let checkStatus: Status = {
         isCompleted: false,
         isSuccess: false
     }
     while (now < deadline) {
-        isSuccess = true
-
         actionStatus = await checkActions(actionStatus, token)
         checkStatus = await checkChecks(checkStatus, token)
 
@@ -84,9 +82,10 @@ export async function polling(options: Options): Promise<string> {
 }
 
 async function checkActions(
-    actionStatus: status,
+    actionStatus: Status,
     token?: string
-): Promise<status> {
+): Promise<Status> {
+    // actions check is completed return last status
     if (actionStatus.isCompleted) {
         return actionStatus
     }
@@ -99,13 +98,14 @@ async function checkActions(
             Authorization: `Bearer ${token}`
         }
     }
+    const response = await http.get(url, headers)
+    const body = await response.readBody()
+    const workflows: WorkflowRuns = JSON.parse(body)
 
     let isCompleted = true
     let isSuccess = true
-    const response = await http.get(url, headers)
-    const body = await response.readBody()
-    const workflows: workflowRuns = JSON.parse(body)
     for (const workflow of workflows.workflow_runs) {
+        // ignore lark-pr-notify-action
         if (context.workflow === workflow.name) {
             continue
         }
@@ -127,9 +127,9 @@ async function checkActions(
 }
 
 async function checkChecks(
-    checkStatus: status,
+    checkStatus: Status,
     token?: string
-): Promise<status> {
+): Promise<Status> {
     if (checkStatus.isCompleted) {
         return checkStatus
     }
@@ -143,14 +143,15 @@ async function checkChecks(
             Authorization: `Bearer ${token}`
         }
     }
+    const response = await http.get(url, headers)
+    const body = await response.readBody()
+    const checks: CheckRuns = JSON.parse(body)
 
     let isCompleted = true
     let isSuccess = true
-    const response = await http.get(url, headers)
-    const body = await response.readBody()
-    const checks: checkRuns = JSON.parse(body)
     for (const check of checks.check_runs) {
-        const workflowName = await getWorkflowName(check.id, token)
+        const workflowName = await getWorkflowNameByJobID(check.id, token)
+        // ignore lark-pr-notify-action
         if (context.workflow === workflowName) {
             continue
         }
@@ -171,7 +172,10 @@ async function checkChecks(
     }
 }
 
-async function getWorkflowName(jobID: number, token?: string): Promise<string> {
+async function getWorkflowNameByJobID(
+    jobID: number,
+    token?: string
+): Promise<string> {
     const http = new httpm.HttpClient('lark-pr-notify-action')
     const url = `${context.apiUrl}/repos/${context.repo.owner}/${context.repo.repo}/actions/jobs/${jobID}`
     let headers = {}
@@ -180,9 +184,8 @@ async function getWorkflowName(jobID: number, token?: string): Promise<string> {
             Authorization: `Bearer ${token}`
         }
     }
-
     const response = await http.get(url, headers)
     const body = await response.readBody()
-    const info: workflowInfo = JSON.parse(body)
+    const info: WorkflowInfo = JSON.parse(body)
     return info.workflow_name
 }

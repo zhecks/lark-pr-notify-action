@@ -40,10 +40,10 @@ function generateAt(contentWorkflowsStatus: string, openIDs: string[]): string {
     let contentAt = ''
     switch (contentWorkflowsStatus.toLowerCase()) {
         case 'success':
-            contentAt = contentAt + '审核人：'.toString()
+            contentAt = '审核人：'.toString()
             break
         default:
-            contentAt = contentAt + '创建人：'.toString()
+            contentAt = '创建人：'.toString()
     }
     for (const openID of openIDs) {
         contentAt = contentAt + `<at id='${openID}'></at> `.toString()
@@ -58,13 +58,13 @@ export function generateMessage(
     reviewers: string,
     contentWorkflowsStatus: string,
     secret: string
-): message {
+): message | undefined {
     const contentPRUrl = context.payload.pull_request?.html_url || ''
     contentWorkflowsStatus = contentWorkflowsStatus.toUpperCase()
     const contentPRTitle = context.payload.pull_request?.title
     let contentWorkflowsStatusColor
-    switch (contentWorkflowsStatus.toLowerCase()) {
-        case 'success':
+    switch (contentWorkflowsStatus) {
+        case 'SUCCESS':
             contentWorkflowsStatusColor = 'green'
             break
         default:
@@ -72,27 +72,29 @@ export function generateMessage(
     }
 
     let openIDs: string[] = []
-    const userArr = users.split(',')
-    for (const user of userArr) {
-        const infos = user.split('|')
-        if (infos.length !== 2) {
-            throw new Error('the secret users is error')
-        }
-        if (infos[0] === context.actor) {
-            openIDs.push(infos[1])
-            break
-        }
-    }
-    // pr's actor is not in users, skip notify
-    if (openIDs.length === 0) {
-        throw new Error('no this user in secret users, skip notify')
-    }
     // success, notify reviewers
-    if (contentWorkflowsStatus.toLowerCase() === 'success') {
+    if (contentWorkflowsStatus === 'SUCCESS') {
         openIDs = reviewers.split(',')
+    } else {
+        // fail, notify creator
+        const userArr = users.split(',')
+        for (const user of userArr) {
+            const userMapping = user.split('|')
+            if (userMapping.length !== 2) {
+                throw new Error('the secret users is error')
+            }
+            if (userMapping[0] === context.actor) {
+                openIDs.push(userMapping[1])
+                break
+            }
+        }
+        // pr's actor is not in users, skip notify
+        if (openIDs.length === 0) {
+            core.info('no this user in secret users, skip notify')
+            return
+        }
     }
     const contentAt = generateAt(contentWorkflowsStatus, openIDs)
-    core.debug(contentAt)
 
     const msgCard: card = {
         type: 'template',

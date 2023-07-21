@@ -28,11 +28,12 @@ async function run(): Promise<void> {
             status,
             secret
         )
-        console.debug(msg)
-
-        core.info('send notification to lark')
-        const webhook = core.getInput('webhook')
-        await notify(webhook, msg)
+        // need notify
+        if (msg != null) {
+            core.info('send notification to lark')
+            const webhook = core.getInput('webhook')
+            await notify(webhook, msg)
+        }
         core.info('finalize')
     } catch (error) {
         if (error instanceof Error) core.setFailed(error.message)

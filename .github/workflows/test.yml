@@ -20,6 +20,8 @@ jobs:
       - uses: actions/checkout@v3
       - uses: ./
         with:
+          template_id: ${{ secrets.template_id }}
           users: ${{ secrets.users }}
+          reviewers: ${{ secrets.reviewers }}
           webhook: ${{ secrets.lark_webhook }}
           secret: ${{ secrets.secret }}
